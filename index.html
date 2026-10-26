@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>비개발자를 위한 클로드코드 입문</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #faf8f5;
+      --surface: #ffffff;
+      --text: #1f1d1a;
+      --muted: #6b665e;
+      --accent: #d97757;
+      --accent-soft: #f6e3da;
+      --border: #e8e3dc;
+      --radius: 16px;
+    }
+    [data-theme="dark"] {
+      --bg: #1b1a18;
+      --surface: #262421;
+      --text: #f1ede7;
+      --muted: #a39d93;
+      --accent: #e8896a;
+      --accent-soft: #3a2b25;
+      --border: #3a3733;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: "Noto Sans KR", system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.7;
+      transition: background .3s, color .3s;
+    }
+    .container { max-width: 1040px; margin: 0 auto; padding: 0 20px; }
+
+    /* 헤더 */
+    header {
+      position: sticky; top: 0; z-index: 10;
+      background: color-mix(in srgb, var(--bg) 85%, transparent);
+      backdrop-filter: blur(8px);
+      border-bottom: 1px solid var(--border);
+    }
+    nav { display: flex; align-items: center; justify-content: space-between; height: 64px; }
+    .logo { font-weight: 900; font-size: 1.1rem; color: var(--text); text-decoration: none; }
+    .logo span { color: var(--accent); }
+    .nav-links { display: flex; gap: 24px; align-items: center; }
+    .nav-links a { color: var(--muted); text-decoration: none; font-size: .95rem; }
+    .nav-links a:hover { color: var(--accent); }
+    .theme-btn {
+      border: 1px solid var(--border); background: var(--surface); color: var(--text);
+      width: 36px; height: 36px; border-radius: 50%; cursor: pointer; font-size: 1rem;
+    }
+
+    /* 히어로 */
+    .hero { padding: 96px 0 80px; text-align: center; }
+    .badge {
+      display: inline-block; padding: 6px 14px; border-radius: 999px;
+      background: var(--accent-soft); color: var(--accent);
+      font-size: .85rem; font-weight: 700; margin-bottom: 20px;
+    }
+    .hero h1 { font-size: clamp(2rem, 5vw, 3.4rem); font-weight: 900; line-height: 1.3; }
+    .hero h1 em { font-style: normal; color: var(--accent); }
+    .hero p { margin: 20px auto 36px; max-width: 600px; color: var(--muted); font-size: 1.1rem; }
+    .btn {
+      display: inline-block; padding: 14px 32px; border-radius: 999px;
+      background: var(--accent); color: #fff; font-weight: 700; text-decoration: none;
+      border: none; cursor: pointer; font-size: 1rem; transition: transform .15s, box-shadow .15s;
+    }
+    .btn:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(217,119,87,.3); }
+
+    /* 터미널 데모 */
+    .terminal {
+      max-width: 640px; margin: 56px auto 0; text-align: left;
+      background: #1e1e1e; color: #e6e6e6; border-radius: 12px;
+      font-family: ui-monospace, Consolas, monospace; font-size: .92rem;
+      box-shadow: 0 20px 50px rgba(0,0,0,.15); overflow: hidden;
+    }
+    .terminal-bar { display: flex; gap: 6px; padding: 12px 16px; background: #2d2d2d; }
+    .terminal-bar i { width: 12px; height: 12px; border-radius: 50%; display: block; }
+    .terminal-bar i:nth-child(1) { background: #ff5f56; }
+    .terminal-bar i:nth-child(2) { background: #ffbd2e; }
+    .terminal-bar i:nth-child(3) { background: #27c93f; }
+    .terminal-body { padding: 20px; min-height: 150px; white-space: pre-wrap; }
+    .terminal-body .prompt { color: #e8896a; }
+    .cursor { display: inline-block; width: 8px; background: #e6e6e6; animation: blink 1s step-end infinite; }
+    @keyframes blink { 50% { opacity: 0; } }
+
+    /* 섹션 공통 */
+    section { padding: 80px 0; }
+    .section-title { text-align: center; margin-bottom: 48px; }
+    .section-title h2 { font-size: clamp(1.6rem, 3.5vw, 2.2rem); font-weight: 900; }
+    .section-title p { color: var(--muted); margin-top: 8px; }
+
+    /* 카드 */
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; }
+    .card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 28px;
+      opacity: 0; transform: translateY(20px); transition: opacity .6s, transform .6s;
+    }
+    .card.visible { opacity: 1; transform: none; }
+    .card .icon { font-size: 2rem; margin-bottom: 12px; }
+    .card h3 { font-size: 1.15rem; margin-bottom: 8px; }
+    .card p { color: var(--muted); font-size: .95rem; }
+
+    /* 커리큘럼 */
+    .curriculum { max-width: 760px; margin: 0 auto; display: flex; flex-direction: column; gap: 12px; }
+    .module { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+    .module-head {
+      width: 100%; display: flex; align-items: center; gap: 16px;
+      padding: 20px 24px; background: none; border: none; color: var(--text);
+      font: inherit; font-weight: 700; font-size: 1.05rem; text-align: left; cursor: pointer;
+    }
+    .module-head .num {
+      flex-shrink: 0; width: 36px; height: 36px; border-radius: 50%;
+      background: var(--accent-soft); color: var(--accent);
+      display: grid; place-items: center; font-size: .9rem;
+    }
+    .module-head .arrow { margin-left: auto; transition: transform .3s; color: var(--muted); }
+    .module.open .arrow { transform: rotate(180deg); }
+    .module-body { max-height: 0; overflow: hidden; transition: max-height .35s ease; }
+    .module-body ul { padding: 0 24px 22px 76px; color: var(--muted); }
+    .module-body li { margin: 4px 0; }
+
+    /* FAQ */
+    .faq { max-width: 760px; margin: 0 auto; }
+    .faq details {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 18px 24px; margin-bottom: 12px;
+    }
+    .faq summary { font-weight: 700; cursor: pointer; list-style: none; }
+    .faq summary::before { content: "Q. "; color: var(--accent); }
+    .faq details p { margin-top: 10px; color: var(--muted); }
+
+    /* 신청 */
+    .cta {
+      position: relative; overflow: hidden;
+      background: #1f1d1a; color: #f1ede7;
+      border: 1px solid #3a3733; border-radius: 28px;
+      padding: 64px 32px; text-align: center;
+    }
+    .cta::before {
+      content: ""; position: absolute; inset: -40% -10% auto;
+      height: 140%; pointer-events: none;
+      background: radial-gradient(ellipse at 50% 0%, rgba(217,119,87,.45), transparent 60%);
+    }
+    .cta > * { position: relative; }
+    .cta .badge { background: rgba(217,119,87,.18); color: #f0a487; margin-bottom: 16px; }
+    .cta h2 { font-size: clamp(1.7rem, 4vw, 2.4rem); font-weight: 900; line-height: 1.3; }
+    .cta p { color: #b8b1a7; margin: 10px 0 32px; }
+    .cta form {
+      display: flex; max-width: 460px; margin: 0 auto;
+      background: #fff; border-radius: 999px; padding: 6px;
+      box-shadow: 0 10px 30px rgba(0,0,0,.3);
+    }
+    .cta input {
+      flex: 1; min-width: 0; padding: 12px 18px;
+      border: none; outline: none; background: none; font: inherit; color: #1f1d1a;
+    }
+    .cta .btn { padding: 12px 24px; white-space: nowrap; }
+    .cta .perks {
+      display: flex; gap: 20px; justify-content: center; flex-wrap: wrap;
+      margin-top: 20px; color: #a39d93; font-size: .88rem;
+    }
+    .cta .perks span::before { content: "✓ "; color: #f0a487; }
+    .form-msg { margin-top: 16px; font-weight: 700; color: #f0a487; }
+    .form-msg:empty { display: none; }
+
+    footer { text-align: center; padding: 40px 0; color: var(--muted); font-size: .9rem; }
+
+    @media (max-width: 640px) {
+      .nav-links a { display: none; }
+      .hero { padding: 64px 0 56px; }
+      section { padding: 56px 0; }
+      .module-body ul { padding-left: 24px; }
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <nav class="container">
+      <a href="#" class="logo">클로드코드 <span>입문</span></a>
+      <div class="nav-links">
+        <a href="#target">수강 대상</a>
+        <a href="#curriculum">커리큘럼</a>
+        <a href="#faq">FAQ</a>
+        <button class="theme-btn" id="themeBtn" aria-label="다크 모드 전환">🌙</button>
+      </div>
+    </nav>
+  </header>
+
+  <main>
+    <!-- 히어로 -->
+    <div class="hero container">
+      <span class="badge">코딩 경험 0도 OK</span>
+      <h1>말로 시키면 만들어지는<br><em>클로드코드</em> 입문</h1>
+      <p>코드를 몰라도 괜찮아요. 하고 싶은 일을 우리말로 설명하면 AI가 대신 만들어 줍니다. 비개발자를 위한 가장 쉬운 첫걸음을 함께해요.</p>
+      <a href="#apply" class="btn">수강 신청하기</a>
+
+      <div class="terminal" aria-hidden="true">
+        <div class="terminal-bar"><i></i><i></i><i></i></div>
+        <div class="terminal-body" id="typing"></div>
+      </div>
+    </div>
+
+    <!-- 수강 대상 -->
+    <section id="target">
+      <div class="container">
+        <div class="section-title">
+          <h2>이런 분께 추천해요</h2>
+          <p>개발자가 아니어도, 만들고 싶은 게 있다면 충분합니다</p>
+        </div>
+        <div class="grid">
+          <div class="card">
+            <div class="icon">💼</div>
+            <h3>반복 업무에 지친 직장인</h3>
+            <p>엑셀 정리, 파일 이름 바꾸기 같은 귀찮은 일을 자동화하고 싶은 분</p>
+          </div>
+          <div class="card">
+            <div class="icon">🎨</div>
+            <h3>아이디어가 있는 기획자·디자이너</h3>
+            <p>머릿속 아이디어를 직접 웹페이지나 프로토타입으로 만들어 보고 싶은 분</p>
+          </div>
+          <div class="card">
+            <div class="icon">🚀</div>
+            <h3>1인 창업가·소상공인</h3>
+            <p>외주 없이 홈페이지나 간단한 도구를 스스로 만들고 싶은 분</p>
+          </div>
+          <div class="card">
+            <div class="icon">🤔</div>
+            <h3>AI가 궁금한 누구나</h3>
+            <p>"AI로 코딩한다는 게 뭐지?" 직접 손으로 경험해 보고 싶은 분</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 커리큘럼 -->
+    <section id="curriculum">
+      <div class="container">
+        <div class="section-title">
+          <h2>커리큘럼</h2>
+          <p>설치부터 나만의 결과물 완성까지, 단계별로 따라와요</p>
+        </div>
+        <div class="curriculum">
+          <div class="module">
+            <button class="module-head"><span class="num">01</span>클로드코드와 첫 만남<span class="arrow">▾</span></button>
+            <div class="module-body"><ul>
+              <li>클로드코드란 무엇인가요? (챗봇과의 차이)</li>
+              <li>터미널이 처음이어도 괜찮은 기본 사용법</li>
+              <li>설치하고 첫 대화 나눠보기</li>
+            </ul></div>
+          </div>
+          <div class="module">
+            <button class="module-head"><span class="num">02</span>AI에게 일 잘 시키는 법<span class="arrow">▾</span></button>
+            <div class="module-body"><ul>
+              <li>원하는 결과를 정확하게 설명하는 요령</li>
+              <li>결과가 마음에 안 들 때 고쳐 달라고 하기</li>
+              <li>실수해도 되돌릴 수 있는 안전한 작업 습관</li>
+            </ul></div>
+          </div>
+          <div class="module">
+            <button class="module-head"><span class="num">03</span>업무 자동화 실습<span class="arrow">▾</span></button>
+            <div class="module-body"><ul>
+              <li>폴더 속 파일 한 번에 정리하기</li>
+              <li>엑셀·CSV 데이터 정리하고 요약하기</li>
+              <li>매번 하던 작업을 명령 한 줄로 만들기</li>
+            </ul></div>
+          </div>
+          <div class="module">
+            <button class="module-head"><span class="num">04</span>나만의 웹페이지 만들기<span class="arrow">▾</span></button>
+            <div class="module-body"><ul>
+              <li>HTML·CSS·JS가 뭔지 딱 필요한 만큼만 이해하기</li>
+              <li>말로 설명해서 소개 페이지 완성하기</li>
+              <li>친구에게 보여줄 수 있게 인터넷에 올리기</li>
+            </ul></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- FAQ -->
+    <section id="faq">
+      <div class="container">
+        <div class="section-title">
+          <h2>자주 묻는 질문</h2>
+        </div>
+        <div class="faq">
+          <details>
+            <summary>코딩을 전혀 몰라도 들을 수 있나요?</summary>
+            <p>네! 이 강의는 코딩 경험이 전혀 없는 분을 기준으로 만들었어요. 필요한 개념은 그때그때 쉽게 설명해 드립니다.</p>
+          </details>
+          <details>
+            <summary>어떤 준비물이 필요한가요?</summary>
+            <p>인터넷이 연결된 노트북(Windows 또는 Mac)과 Claude 계정이 있으면 됩니다. 설치 방법은 첫 시간에 함께 진행해요.</p>
+          </details>
+          <details>
+            <summary>강의가 끝나면 무엇을 할 수 있게 되나요?</summary>
+            <p>반복 업무를 자동화하는 간단한 도구와, 직접 만든 웹페이지 하나를 결과물로 갖게 됩니다. 무엇보다 "AI로 만들 수 있다"는 자신감을 얻어 가실 거예요.</p>
+          </details>
+          <details>
+            <summary>ChatGPT나 Claude 채팅과는 뭐가 다른가요?</summary>
+            <p>채팅은 답변을 알려주면 내가 직접 복사해서 옮겨야 하지만, 클로드코드는 내 컴퓨터에서 파일을 직접 만들고 고쳐 줘요. "말하면 실제로 만들어지는" 경험이 가장 큰 차이예요.</p>
+          </details>
+          <details>
+            <summary>AI가 내 컴퓨터 파일을 마음대로 바꾸면 어떡하죠?</summary>
+            <p>클로드코드는 파일을 바꾸거나 명령을 실행하기 전에 허락을 구하도록 설정할 수 있어요. 강의에서 작업 폴더를 따로 만들고 안전하게 쓰는 습관부터 함께 익힙니다.</p>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    <!-- 신청 -->
+    <section id="apply">
+      <div class="container">
+        <div class="cta">
+          <span class="badge">개강 알림 신청</span>
+          <h2>지금 시작하세요</h2>
+          <p>이메일을 남겨 주시면 개강 일정과 신청 방법을 안내해 드려요.</p>
+          <form id="applyForm" novalidate>
+            <input type="email" id="email" placeholder="이메일 주소" aria-label="이메일 주소" />
+            <button type="submit" class="btn">알림 받기</button>
+          </form>
+          <div class="form-msg" id="formMsg"></div>
+          <div class="perks">
+            <span>코딩 경험 필요 없음</span>
+            <span>개강 소식만 보내드려요</span>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>© 2026 비개발자를 위한 클로드코드 입문</footer>
+
+  <script>
+    // 다크 모드 전환
+    const themeBtn = document.getElementById("themeBtn");
+    themeBtn.addEventListener("click", () => {
+      const dark = document.documentElement.dataset.theme === "dark";
+      document.documentElement.dataset.theme = dark ? "light" : "dark";
+      themeBtn.textContent = dark ? "🌙" : "☀️";
+    });
+
+    // 터미널 타이핑 데모
+    const lines = [
+      { text: "> 우리 가게 소개 웹페이지 만들어줘", prompt: true },
+      { text: "\n\n✻ 좋아요! 메뉴, 위치, 영업시간이 들어간 페이지를 만들게요..." },
+      { text: "\n✓ index.html 파일을 만들었어요." },
+    ];
+    const typingEl = document.getElementById("typing");
+    let lineIdx = 0, charIdx = 0, currentSpan;
+
+    function type() {
+      if (lineIdx >= lines.length) {
+        typingEl.insertAdjacentHTML("beforeend", '<span class="cursor">&nbsp;</span>');
+        return;
+      }
+      const line = lines[lineIdx];
+      if (charIdx === 0) {
+        currentSpan = document.createElement("span");
+        if (line.prompt) currentSpan.className = "prompt";
+        typingEl.appendChild(currentSpan);
+      }
+      currentSpan.textContent += line.text[charIdx++];
+      if (charIdx >= line.text.length) {
+        lineIdx++; charIdx = 0;
+        setTimeout(type, 600);
+      } else {
+        setTimeout(type, line.prompt ? 70 : 30);
+      }
+    }
+    setTimeout(type, 500);
+
+    // 커리큘럼 아코디언
+    document.querySelectorAll(".module-head").forEach((head) => {
+      head.addEventListener("click", () => {
+        const module = head.parentElement;
+        const body = module.querySelector(".module-body");
+        const isOpen = module.classList.toggle("open");
+        body.style.maxHeight = isOpen ? body.scrollHeight + "px" : null;
+      });
+    });
+
+    // 스크롤 시 카드 등장 애니메이션
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry, i) => {
+        if (entry.isIntersecting) {
+          setTimeout(() => entry.target.classList.add("visible"), i * 100);
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.2 });
+    document.querySelectorAll(".card").forEach((card) => observer.observe(card));
+
+    // 신청 폼
+    document.getElementById("applyForm").addEventListener("submit", (e) => {
+      e.preventDefault();
+      const email = document.getElementById("email").value.trim();
+      const msg = document.getElementById("formMsg");
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        msg.textContent = "올바른 이메일 주소를 입력해 주세요.";
+        return;
+      }
+      msg.textContent = "🎉 신청 완료! 개강 소식을 곧 보내드릴게요.";
+      e.target.reset();
+    });
+  </script>
+</body>
+</html>
